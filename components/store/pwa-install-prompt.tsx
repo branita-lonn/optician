@@ -79,7 +79,7 @@ export function PwaInstallPrompt() {
         <div className="flex-shrink-0">
           <Image
             src="/icons/icon-192.png"
-            alt="MiDuka"
+            alt="Eyedeal Opticians"
             width={32}
             height={32}
             className="rounded-lg object-cover"
@@ -88,7 +88,7 @@ export function PwaInstallPrompt() {
 
         {/* Centre: Text */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">Add MiDuka to your home screen</p>
+          <p className="text-sm font-medium truncate">Add Eyedeal Opticians to your home screen</p>
           <p className="text-xs text-muted-foreground truncate">Shop faster, offline support</p>
         </div>
 

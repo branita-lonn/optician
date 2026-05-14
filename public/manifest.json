@@ -1,7 +1,7 @@
 {
-  "name": "MiDuka",
-  "short_name": "MiDuka",
-  "description": "Your single-seller e-commerce platform",
+  "name": "Eyedeal Opticians",
+  "short_name": "Eyedeal Opticians",
+  "description": "Quality eyewear online with prescriptions",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
