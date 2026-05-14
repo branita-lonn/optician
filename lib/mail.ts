@@ -124,3 +124,21 @@ export async function sendAbandonedCart({
     throw error;
   }
 }
+interface SendEmailParams {
+  to: string;
+  subject: string;
+  html: string;
+}
+
+export async function sendEmail({ to, subject, html }: SendEmailParams) {
+  try {
+    await resend.emails.send({
+      from: "MiDuka <notifications@miduka.com>",
+      to,
+      subject,
+      html,
+    });
+  } catch (error) {
+    console.error("Failed to send email:", error);
+  }
+}

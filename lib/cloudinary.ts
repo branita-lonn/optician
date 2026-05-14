@@ -62,3 +62,41 @@ export async function deleteImage(publicId: string, resourceType: "image" | "vid
     }
   }
 }
+export async function uploadFile(file: string | Buffer, folder: string): Promise<{ url: string; publicId: string }> {
+  try {
+    // If it's a buffer, we need to use upload_stream or convert to base64
+    // Cloudinary uploader.upload supports file path, url, or base64.
+    // For buffers, we'll use a Promise wrapper around upload_stream.
+    
+    if (Buffer.isBuffer(file)) {
+      return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder, resource_type: "auto" },
+          (error, result) => {
+            if (error || !result) {
+              reject(new Error(`Cloudinary upload failed: ${error?.message || "Unknown error"}`));
+            } else {
+              resolve({ url: result.secure_url, publicId: result.public_id });
+            }
+          }
+        );
+        uploadStream.end(file);
+      });
+    }
+
+    const result = await cloudinary.uploader.upload(file, {
+      folder: folder,
+      resource_type: "auto",
+    });
+
+    return {
+      url: result.secure_url,
+      publicId: result.public_id,
+    };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(`Cloudinary upload failed: ${error.message}`);
+    }
+    throw new Error("Cloudinary upload failed with an unknown error.");
+  }
+}
