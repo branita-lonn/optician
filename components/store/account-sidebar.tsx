@@ -13,7 +13,8 @@ import {
   ChevronRight,
   Coins,
   Menu,
-  X
+  X,
+  Calendar
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -23,6 +24,11 @@ const navItems = [
     title: "My Orders",
     href: "/account/orders",
     icon: Package,
+  },
+  {
+    title: "My Appointments",
+    href: "/account/appointments",
+    icon: Calendar,
   },
   {
     title: "Wishlist",

@@ -332,6 +332,7 @@ model Prescription {
   isVerified      Boolean  @default(false) // true = verified by optician staff
   verifiedAt      DateTime?
   verifiedById    String?  // User.id of the staff who verified
+  staffNotes      String?  @db.Text
 
   notes           String?  @db.Text
   expiresAt       DateTime? // Prescriptions expire, typically after 1-2 years

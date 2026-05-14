@@ -106,7 +106,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(_request: NextRequest): Promise<NextResponse> {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -153,14 +153,14 @@ async function notifySellerNewPrescription(
   guestEmail: string | null
 ): Promise<void> {
   const store = await prisma.storeSettings.findFirst({
-    select: { storeName: true, storeEmail: true },
+    select: { storeName: true, contactEmail: true },
   });
 
-  if (!store?.storeEmail) return;
+  if (!store?.contactEmail) return;
 
   const { sendEmail } = await import("@/lib/mail");
   await sendEmail({
-    to: store.storeEmail,
+    to: store.contactEmail,
     subject: `New Prescription Submitted — ${store.storeName}`,
     html: `
       <p>A new prescription has been submitted.</p>

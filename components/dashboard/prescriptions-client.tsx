@@ -3,21 +3,18 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { format } from "date-fns";
 import { 
   Eye, 
   Search, 
-  Filter, 
-  CheckCircle, 
-  Clock, 
   FileText, 
   User, 
-  Mail,
-  MoreHorizontal,
   ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -73,7 +70,6 @@ export function PrescriptionsClient({ initialPrescriptions }: { initialPrescript
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [selectedRx, setSelectedRx] = useState<Prescription | null>(null);
   const [staffNotes, setStaffNotes] = useState("");
 
   const activeTab = searchParams.get("verified") || "all";
@@ -98,7 +94,6 @@ export function PrescriptionsClient({ initialPrescriptions }: { initialPrescript
       if (!res.ok) throw new Error("Failed to verify");
 
       toast.success("Prescription verified");
-      setSelectedRx(null);
       router.refresh();
     } catch (err: any) {
       toast.error(err.message);
@@ -192,23 +187,20 @@ export function PrescriptionsClient({ initialPrescriptions }: { initialPrescript
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={rx.isVerified ? "success" : "warning"} className="rounded-full">
+                    <Badge variant={rx.isVerified ? "outline-green" : "outline-amber"} className="rounded-full">
                       {rx.isVerified ? "Verified" : "Pending"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Sheet onOpenChange={(open) => {
-                      if (open) {
-                        setSelectedRx(rx);
-                        setStaffNotes(rx.staffNotes || "");
-                      }
-                    }}>
-                      <SheetTrigger asChild>
+                    <Sheet>
+                      <SheetTrigger>
                         <Button variant="ghost" size="sm" className="rounded-full h-8 w-8 p-0">
                           <Eye className="h-4 w-4" />
                         </Button>
                       </SheetTrigger>
-                      <SheetContent className="sm:max-w-xl overflow-y-auto">
+                      <SheetContent className="sm:max-w-xl overflow-y-auto" onOpenAutoFocus={(e) => {
+                        setStaffNotes(rx.staffNotes || "");
+                      }}>
                         <SheetHeader>
                           <SheetTitle>Prescription Details</SheetTitle>
                           <SheetDescription>
@@ -285,15 +277,20 @@ export function PrescriptionsClient({ initialPrescriptions }: { initialPrescript
                                       <p className="text-xs text-muted-foreground">Uploaded by customer</p>
                                     </div>
                                   </div>
-                                  <Button variant="outline" size="sm" asChild className="rounded-full">
-                                    <a href={rx.uploadedFileUrl!} target="_blank" rel="noopener noreferrer">
+                                  <Link href={rx.uploadedFileUrl!} target="_blank" rel="noopener noreferrer">
+                                    <Button variant="outline" size="sm" className="rounded-full">
                                       <ExternalLink className="h-4 w-4 mr-2" /> View File
-                                    </a>
-                                  </Button>
+                                    </Button>
+                                  </Link>
                                 </div>
                                 {rx.uploadedFileUrl?.match(/\.(jpg|jpeg|png|webp)$/i) && (
-                                  <div className="border rounded-2xl overflow-hidden bg-muted/20">
-                                    <img src={rx.uploadedFileUrl} alt="Prescription" className="w-full h-auto" />
+                                  <div className="border rounded-2xl overflow-hidden bg-muted/20 relative aspect-video">
+                                    <Image 
+                                      src={rx.uploadedFileUrl} 
+                                      alt="Prescription" 
+                                      fill 
+                                      className="object-contain" 
+                                    />
                                   </div>
                                 )}
                               </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, Tags, ShoppingCart, Users, BarChart, Settings, MessageSquare, Zap, Gift, Boxes, Truck, LayoutTemplate, Ticket, ClipboardList } from "lucide-react";
+import { LayoutDashboard, Package, Tags, ShoppingCart, Users, BarChart, Settings, MessageSquare, Zap, Gift, Boxes, Truck, LayoutTemplate, Ticket, ClipboardList, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -13,6 +13,7 @@ const navLinks = [
   { href: "/dashboard/inventory", label: "Inventory", icon: Package },
   { href: "/dashboard/orders", label: "Orders", icon: ShoppingCart },
   { href: "/dashboard/prescriptions", label: "Prescriptions", icon: ClipboardList },
+  { href: "/dashboard/appointments", label: "Appointments", icon: Calendar },
   { href: "/dashboard/customers", label: "Customers", icon: Users },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart },
   { href: "/dashboard/flash-sales", label: "Flash Sales", icon: Zap },

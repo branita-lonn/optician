@@ -13,7 +13,7 @@ export default async function DashboardPrescriptionsPage({
   searchParams: Promise<{ page?: string; verified?: string; q?: string }>;
 }) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "STORE_OWNER") {
+  if (!session || session.user.role !== "STORE_OWNER") {
     redirect("/auth/login");
   }
 

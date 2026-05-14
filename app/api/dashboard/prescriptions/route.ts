@@ -8,7 +8,7 @@ import { auth } from "@/auth";
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const session = await auth();
-    if (session?.user?.role !== "ADMIN") {
+    if (session?.user?.role !== "STORE_OWNER") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

@@ -8,6 +8,7 @@ import { AbandonedCartEmail } from "@/emails/abandoned-cart";
 import React from "react";
 import { render } from "@react-email/components";
 import { OrderStatus } from "@prisma/client";
+import { AppointmentConfirmationEmail } from "@/emails/appointment-confirmation";
 
 export const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -140,5 +141,44 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
     });
   } catch (error) {
     console.error("Failed to send email:", error);
+  }
+}
+
+interface SendAppointmentConfirmationParams {
+  email: string;
+  customerName: string;
+  appointmentType: string;
+  scheduledDate: string;
+  scheduledTime: string;
+  status: string;
+}
+
+export async function sendAppointmentConfirmation({
+  email,
+  customerName,
+  appointmentType,
+  scheduledDate,
+  scheduledTime,
+  status,
+}: SendAppointmentConfirmationParams) {
+  try {
+    const html = await render(
+      React.createElement(AppointmentConfirmationEmail, {
+        customerName,
+        appointmentType,
+        scheduledDate,
+        scheduledTime,
+        status,
+      })
+    );
+
+    await resend.emails.send({
+      from: "MiDuka <appointments@miduka.com>",
+      to: email,
+      subject: `Appointment ${status}: ${appointmentType.replace(/_/g, ' ')}`,
+      html,
+    });
+  } catch (error) {
+    console.error("Failed to send appointment confirmation email:", error);
   }
 }

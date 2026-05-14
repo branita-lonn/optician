@@ -17,7 +17,7 @@ export async function PATCH(
 ): Promise<NextResponse> {
   try {
     const session = await auth();
-    if (session?.user?.role !== "ADMIN") {
+    if (session?.user?.role !== "STORE_OWNER") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -68,7 +68,7 @@ export async function GET(
 ): Promise<NextResponse> {
   try {
     const session = await auth();
-    if (session?.user?.role !== "ADMIN") {
+    if (session?.user?.role !== "STORE_OWNER") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

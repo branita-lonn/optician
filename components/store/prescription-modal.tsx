@@ -128,7 +128,7 @@ export function PrescriptionModal({
   const [success, setSuccess] = useState(false);
 
   const form = useForm<ManualFormValues>({
-    resolver: zodResolver(manualSchema),
+    resolver: zodResolver(manualSchema) as any,
     defaultValues: {
       od: { sphere: null, cylinder: null, axis: null, add: null },
       os: { sphere: null, cylinder: null, axis: null, add: null },
@@ -325,7 +325,7 @@ export function PrescriptionModal({
                   <p className="text-sm font-semibold">Pupillary Distance (PD)</p>
                   <div className="grid grid-cols-2 gap-3">
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="pdDistance"
                       render={({ field }: any) => (
                         <FormItem>
@@ -344,7 +344,7 @@ export function PrescriptionModal({
                       )}
                     />
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="pdNear"
                       render={({ field }: any) => (
                         <FormItem>
@@ -365,7 +365,7 @@ export function PrescriptionModal({
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="pdRight"
                       render={({ field }: any) => (
                         <FormItem>
@@ -383,7 +383,7 @@ export function PrescriptionModal({
                       )}
                     />
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="pdLeft"
                       render={({ field }: any) => (
                         <FormItem>
@@ -405,7 +405,7 @@ export function PrescriptionModal({
 
                 {/* Notes */}
                 <FormField
-                  control={form.control}
+                  control={form.control as any}
                   name="notes"
                   render={({ field }: any) => (
                     <FormItem>

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PrescriptionModal } from "./prescription-modal";
+import Link from "next/link";
 
 interface Prescription {
   id: string;
@@ -74,7 +75,7 @@ export function PrescriptionsClient({ prescriptions }: { prescriptions: Prescrip
                   <div className="text-xs text-muted-foreground">
                     {format(new Date(rx.createdAt), "PPP")}
                   </div>
-                  <Badge variant={rx.isVerified ? "success" : "warning"} className="rounded-full">
+                  <Badge variant={rx.isVerified ? "outline-green" : "outline-amber"} className="rounded-full">
                     {rx.isVerified ? (
                       <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Verified</span>
                     ) : (
@@ -107,9 +108,9 @@ export function PrescriptionsClient({ prescriptions }: { prescriptions: Prescrip
                     </div>
                     <div>
                       <p className="text-sm font-medium">Uploaded Prescription</p>
-                      <a href={rx.uploadedFileUrl!} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                      <Link href={rx.uploadedFileUrl!} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
                         View file
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 )}
