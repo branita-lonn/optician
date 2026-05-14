@@ -74,6 +74,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
           stockQuantity: true,
           sku: true,
           isActive: true,
+          frameSize: true,
+          lensType: true,
+          lensCoating: true,
+          prescriptionReady: true,
         },
       },
       reviews: {
@@ -179,6 +183,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         stockQuantity: v.stockQuantity,
         sku: v.sku,
         isActive: v.isActive,
+        frameSize: v.frameSize ?? null,
+        lensType: v.lensType ?? null,
+        lensCoating: v.lensCoating ?? null,
+        prescriptionReady: v.prescriptionReady,
       })),
       reviewCount: p.reviews.length,
       rating: p.reviews.length > 0 
@@ -190,6 +198,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         startTime: (p as any).flashSale.startTime.toISOString(),
         endTime: (p as any).flashSale.endTime.toISOString(),
       } : null,
+      productType: p.productType,
+      frameMeasurements: p.frameMeasurements ?? null,
+      isRxRequired: p.isRxRequired,
+      tryOnImageUrl: p.tryOnImageUrl ?? null,
     }));
 
     const response: ProductsApiResponse = {

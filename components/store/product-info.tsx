@@ -34,6 +34,9 @@ export default function ProductInfo({
   const [selectedColour, setSelectedColour] = useState<string | null>(externalSelectedColour ?? null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
+  const [selectedFrameSize, setSelectedFrameSize] = useState<string | null>(null);
+  const [selectedLensType, setSelectedLensType] = useState<string | null>(null);
+  const [selectedLensCoating, setSelectedLensCoating] = useState<string | null>(null);
 
   // Sync internal state with external state
   useEffect(() => {
@@ -54,6 +57,9 @@ export default function ProductInfo({
       (selectedColour ? v.colour === selectedColour : !v.colour) &&
       (selectedSize ? v.size === selectedSize : !v.size) &&
       (selectedMaterial ? v.material === selectedMaterial : !v.material) &&
+      (selectedFrameSize ? v.frameSize === selectedFrameSize : !v.frameSize) &&
+      (selectedLensType ? v.lensType === selectedLensType : !v.lensType) &&
+      (selectedLensCoating ? v.lensCoating === selectedLensCoating : !v.lensCoating) &&
       v.isActive
   );
 
@@ -85,14 +91,20 @@ export default function ProductInfo({
   const colours = [...new Set(product.variants.map((v) => v.colour).filter(Boolean))] as string[];
   const sizes = [...new Set(product.variants.map((v) => v.size).filter(Boolean))] as string[];
   const materials = [...new Set(product.variants.map((v) => v.material).filter(Boolean))] as string[];
+  const frameSizes = [...new Set(product.variants.map((v) => v.frameSize).filter(Boolean))] as string[];
+  const lensTypes = [...new Set(product.variants.map((v) => v.lensType).filter(Boolean))] as string[];
+  const lensCoatings = [...new Set(product.variants.map((v) => v.lensCoating).filter(Boolean))] as string[];
 
-  function handleOptionSelect(type: 'colour' | 'size' | 'material', value: string) {
+  function handleOptionSelect(type: 'colour' | 'size' | 'material' | 'frameSize' | 'lensType' | 'lensCoating', value: string) {
     if (type === 'colour') {
       setSelectedColour(value);
       onColourChange?.(value);
     }
     if (type === 'size') setSelectedSize(value);
     if (type === 'material') setSelectedMaterial(value);
+    if (type === 'frameSize') setSelectedFrameSize(value);
+    if (type === 'lensType') setSelectedLensType(value);
+    if (type === 'lensCoating') setSelectedLensCoating(value);
     setQuantity(1);
   }
 
@@ -191,6 +203,43 @@ export default function ProductInfo({
         />
       )}
 
+      {/* Prescription required notice */}
+      {product.isRxRequired && (
+        <div className="flex items-center gap-2 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-4 py-3 text-sm text-blue-700 dark:text-blue-300">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <span>
+            A valid prescription is required for this product. You will be prompted to upload or enter your Rx details before checkout.
+          </span>
+        </div>
+      )}
+
+      {/* Frame measurements */}
+      {product.frameMeasurements && (() => {
+        try {
+          const m = JSON.parse(product.frameMeasurements) as Record<string, string>;
+          const keys = Object.keys(m);
+          if (keys.length === 0) return null;
+          return (
+            <div className="rounded-xl border border-border p-4">
+              <p className="text-sm font-medium mb-3">Frame Measurements</p>
+              <div className="grid grid-cols-3 gap-2">
+                {keys.map((key) => (
+                  <div key={key} className="text-center">
+                    <p className="text-xs text-muted-foreground capitalize">{key.replace(/([A-Z])/g, " $1")}</p>
+                    <p className="text-sm font-semibold">{m[key]}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        } catch {
+          return null;
+        }
+      })()}
+
       {/* Colour selector */}
       {colours.length > 0 && (
         <div className="space-y-2">
@@ -269,6 +318,90 @@ export default function ProductInfo({
                 )}
               >
                 {material}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Frame Size selector */}
+      {frameSizes.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">
+            Frame Size:{" "}
+            <span className="font-normal text-muted-foreground">
+              {selectedFrameSize ?? "Select"}
+            </span>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {frameSizes.map((fs) => (
+              <button
+                key={fs}
+                onClick={() => handleOptionSelect("frameSize", fs)}
+                className={cn(
+                  "rounded-xl border-2 px-4 py-1.5 text-sm font-medium transition-all",
+                  selectedFrameSize === fs
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border hover:border-primary/50"
+                )}
+              >
+                {fs}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Lens Type selector */}
+      {lensTypes.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">
+            Lens Type:{" "}
+            <span className="font-normal text-muted-foreground">
+              {selectedLensType ?? "Select"}
+            </span>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {lensTypes.map((lt) => (
+              <button
+                key={lt}
+                onClick={() => handleOptionSelect("lensType", lt)}
+                className={cn(
+                  "rounded-xl border-2 px-4 py-1.5 text-sm font-medium transition-all",
+                  selectedLensType === lt
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border hover:border-primary/50"
+                )}
+              >
+                {lt}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Lens Coating selector */}
+      {lensCoatings.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">
+            Lens Coating:{" "}
+            <span className="font-normal text-muted-foreground">
+              {selectedLensCoating ?? "Select"}
+            </span>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {lensCoatings.map((lc) => (
+              <button
+                key={lc}
+                onClick={() => handleOptionSelect("lensCoating", lc)}
+                className={cn(
+                  "rounded-xl border-2 px-4 py-1.5 text-sm font-medium transition-all",
+                  selectedLensCoating === lc
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border hover:border-primary/50"
+                )}
+              >
+                {lc}
               </button>
             ))}
           </div>

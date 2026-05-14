@@ -41,6 +41,11 @@ const variantSchema = z.object({
   stockQuantity: z.coerce.number().int().default(0),
   sku: z.string().optional(),
   isActive: z.boolean().default(true),
+  // Optician fields
+  frameSize: z.string().optional(),
+  lensType: z.string().optional(),
+  lensCoating: z.string().optional(),
+  prescriptionReady: z.boolean().default(false),
 });
 
 const imageSchema = z.object({
@@ -62,6 +67,18 @@ const formSchema = z.object({
   stockQuantity: z.coerce.number().int().default(0),
   images: z.array(imageSchema).default([]),
   variants: z.array(variantSchema).default([]),
+  // Optician fields
+  productType: z.enum([
+    "GENERAL",
+    "PRESCRIPTION_GLASSES",
+    "SUNGLASSES",
+    "CONTACT_LENSES",
+    "READING_GLASSES",
+    "ACCESSORIES",
+  ]).default("GENERAL"),
+  frameMeasurements: z.string().optional().nullable(),
+  isRxRequired: z.boolean().default(false),
+  tryOnImageUrl: z.string().url().optional().nullable(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -72,7 +89,7 @@ interface ProductFormProps {
   featuredCount: number;
 }
 
-const STEPS = ["Details", "Description", "Variants", "Media"];
+const STEPS = ["Details", "Description", "Variants", "Optician", "Media"];
 
 export function ProductForm({ initialData, categories, featuredCount }: ProductFormProps) {
   const router = useRouter();
@@ -110,7 +127,15 @@ export function ProductForm({ initialData, categories, featuredCount }: ProductF
             stockQuantity: v.stockQuantity,
             sku: v.sku || "",
             isActive: v.isActive,
+            frameSize: v.frameSize || "",
+            lensType: v.lensType || "",
+            lensCoating: v.lensCoating || "",
+            prescriptionReady: v.prescriptionReady || false,
           })) || [],
+          productType: (initialData.productType as any) || "GENERAL",
+          frameMeasurements: initialData.frameMeasurements || "",
+          isRxRequired: initialData.isRxRequired || false,
+          tryOnImageUrl: initialData.tryOnImageUrl || "",
         }
       : {
           name: "",
@@ -125,6 +150,10 @@ export function ProductForm({ initialData, categories, featuredCount }: ProductF
           stockQuantity: 0,
           images: [],
           variants: [],
+          productType: "GENERAL",
+          frameMeasurements: "",
+          isRxRequired: false,
+          tryOnImageUrl: "",
         },
   });
 
@@ -152,6 +181,20 @@ export function ProductForm({ initialData, categories, featuredCount }: ProductF
       isValid = await form.trigger(["description"]);
     } else if (currentStep === 2) {
       isValid = await form.trigger(["stockQuantity", "variants"]);
+    } else if (currentStep === 3) {
+      // Optician step: validate JSON if frameMeasurements provided
+      const frameMeasurements = form.getValues("frameMeasurements");
+      if (frameMeasurements) {
+        try {
+          JSON.parse(frameMeasurements);
+          isValid = true;
+        } catch {
+          form.setError("frameMeasurements", { message: "Must be valid JSON" });
+          isValid = false;
+        }
+      } else {
+        isValid = true;
+      }
     }
 
     if (isValid) {
@@ -585,7 +628,7 @@ export function ProductForm({ initialData, categories, featuredCount }: ProductF
                     variant="outline"
                     size="sm"
                     className="rounded-xl"
-                    onClick={() => appendVariant({ colour: "", size: "", material: "", priceOverride: undefined, stockQuantity: 0, sku: "", isActive: true })}
+                    onClick={() => appendVariant({ colour: "", size: "", material: "", priceOverride: undefined, stockQuantity: 0, sku: "", isActive: true, frameSize: "", lensType: "", lensCoating: "", prescriptionReady: false })}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Variant
@@ -639,6 +682,101 @@ export function ProductForm({ initialData, categories, featuredCount }: ProductF
                             <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                           )} />
                         </div>
+
+                        {/* Optician fields row */}
+                        <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-4 gap-3 pt-3 border-t">
+                          <FormField
+                            control={form.control}
+                            name={`variants.${index}.frameSize`}
+                            render={({ field }: any) => (
+                              <FormItem>
+                                <FormLabel className="text-xs">Frame Size</FormLabel>
+                                <Select disabled={loading} onValueChange={field.onChange} value={field.value || ""}>
+                                  <SelectTrigger className="rounded-xl h-9 text-sm">
+                                    <SelectValue placeholder="Select size" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="">None</SelectItem>
+                                    <SelectItem value="XS">XS (48mm)</SelectItem>
+                                    <SelectItem value="S">S (50–51mm)</SelectItem>
+                                    <SelectItem value="M">M (52–53mm)</SelectItem>
+                                    <SelectItem value="L">L (54–55mm)</SelectItem>
+                                    <SelectItem value="XL">XL (56mm+)</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`variants.${index}.lensType`}
+                            render={({ field }: any) => (
+                              <FormItem>
+                                <FormLabel className="text-xs">Lens Type</FormLabel>
+                                <Select disabled={loading} onValueChange={field.onChange} value={field.value || ""}>
+                                  <SelectTrigger className="rounded-xl h-9 text-sm">
+                                    <SelectValue placeholder="Select lens type" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="">None</SelectItem>
+                                    <SelectItem value="Non-Prescription">Non-Prescription</SelectItem>
+                                    <SelectItem value="Single Vision">Single Vision</SelectItem>
+                                    <SelectItem value="Bifocal">Bifocal</SelectItem>
+                                    <SelectItem value="Progressive">Progressive</SelectItem>
+                                    <SelectItem value="Reading">Reading (+1.0 to +3.5)</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`variants.${index}.lensCoating`}
+                            render={({ field }: any) => (
+                              <FormItem>
+                                <FormLabel className="text-xs">Lens Coating</FormLabel>
+                                <Select disabled={loading} onValueChange={field.onChange} value={field.value || ""}>
+                                  <SelectTrigger className="rounded-xl h-9 text-sm">
+                                    <SelectValue placeholder="Select coating" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="">None</SelectItem>
+                                    <SelectItem value="Standard">Standard</SelectItem>
+                                    <SelectItem value="Anti-Glare">Anti-Glare</SelectItem>
+                                    <SelectItem value="UV400">UV400</SelectItem>
+                                    <SelectItem value="Blue Light Block">Blue Light Block</SelectItem>
+                                    <SelectItem value="Photochromic">Photochromic (Transitions)</SelectItem>
+                                    <SelectItem value="Anti-Glare + UV400">Anti-Glare + UV400</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`variants.${index}.prescriptionReady`}
+                            render={({ field }: any) => (
+                              <FormItem className="flex flex-row items-center justify-between rounded-xl border p-3 gap-3">
+                                <div>
+                                  <FormLabel className="text-xs font-medium">Prescription Ready</FormLabel>
+                                  <FormDescription className="text-[10px]">
+                                    Customer can submit an Rx for this variant
+                                  </FormDescription>
+                                </div>
+                                <FormControl>
+                                  <Switch
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    disabled={loading}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -647,8 +785,121 @@ export function ProductForm({ initialData, categories, featuredCount }: ProductF
             </div>
           )}
 
-          {/* STEP 4: Media */}
+          {/* STEP 4: Optician Settings */}
           {currentStep === 3 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div>
+                <h3 className="text-base font-semibold">Optician Settings</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Configure product-type-specific settings for the optician store.
+                  Leave as &ldquo;General&rdquo; for non-optical products like accessories.
+                </p>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="productType"
+                render={({ field }: any) => (
+                  <FormItem>
+                    <FormLabel>Product Type</FormLabel>
+                    <Select disabled={loading} onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="rounded-xl">
+                          <SelectValue placeholder="Select product type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="GENERAL">General / Accessory</SelectItem>
+                        <SelectItem value="PRESCRIPTION_GLASSES">Prescription Glasses</SelectItem>
+                        <SelectItem value="SUNGLASSES">Sunglasses</SelectItem>
+                        <SelectItem value="CONTACT_LENSES">Contact Lenses</SelectItem>
+                        <SelectItem value="READING_GLASSES">Reading Glasses</SelectItem>
+                        <SelectItem value="ACCESSORIES">Accessories (Cases, Solutions)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription className="text-xs">
+                      This controls which configurator the customer sees on the product page.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="isRxRequired"
+                render={({ field }: any) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-xl border p-4 gap-4">
+                    <div>
+                      <FormLabel>Always Requires Prescription</FormLabel>
+                      <FormDescription className="text-xs">
+                        If on, customers MUST submit an Rx before adding to cart.
+                        Typically enabled for Prescription Glasses only.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={loading}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="frameMeasurements"
+                render={({ field }: any) => (
+                  <FormItem>
+                    <FormLabel>Frame Measurements (JSON)</FormLabel>
+                    <FormControl>
+                      <Input
+                        disabled={loading}
+                        placeholder='{"bridge":"18mm","temple":"140mm","lens":"52mm"}'
+                        {...field}
+                        value={field.value || ""}
+                        className="rounded-xl font-mono text-sm"
+                      />
+                    </FormControl>
+                    <FormDescription className="text-xs">
+                      Optional. Enter as JSON. Displayed in a measurements table on the product page.
+                      Keys: bridge, temple, lens, frameWidth, frameHeight.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="tryOnImageUrl"
+                render={({ field }: any) => (
+                  <FormItem>
+                    <FormLabel>Virtual Try-On Overlay URL</FormLabel>
+                    <FormControl>
+                      <Input
+                        disabled={loading}
+                        placeholder="https://res.cloudinary.com/..."
+                        {...field}
+                        value={field.value || ""}
+                        className="rounded-xl"
+                      />
+                    </FormControl>
+                    <FormDescription className="text-xs">
+                      Transparent PNG of just the frames, used for the AR try-on feature.
+                      Upload as a transparent PNG to Cloudinary and paste the URL here.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+
+          {/* STEP 5: Media */}
+          {currentStep === 4 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="flex items-center justify-between">
                 <div>

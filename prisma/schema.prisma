@@ -68,6 +68,31 @@ enum LoyaltyTransactionType {
   REDEEM
 }
 
+enum ProductType {
+  GENERAL          // Default for non-optician products
+  PRESCRIPTION_GLASSES
+  SUNGLASSES
+  CONTACT_LENSES
+  READING_GLASSES
+  ACCESSORIES      // Cases, cleaning kits, lens solutions
+}
+
+enum AppointmentType {
+  EYE_TEST
+  FRAME_FITTING
+  CONTACT_LENS_CONSULTATION
+  COLLECTION           // Customer collects ready glasses
+  FOLLOW_UP
+}
+
+enum AppointmentStatus {
+  PENDING    // Just booked, not yet confirmed
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
 // ─── AUTH MODELS ──────────────────────────────────────────────────────────────
 
 model User {
@@ -93,6 +118,8 @@ model User {
   reviewVotes  ReviewVote[]
   engagements  Engagement[]
   loyaltyAccount LoyaltyAccount?
+  prescriptions   Prescription[]
+  appointments    Appointment[]
 }
 
 model Account {
@@ -192,6 +219,13 @@ model Product {
   isOnSale       Boolean  @default(false)
   stockQuantity  Int      @default(0)
   lowStockThreshold Int   @default(5)
+
+  // ─── Optician-specific product fields ─────────────────────────────────────
+  productType       ProductType @default(GENERAL)
+  frameMeasurements String?    // JSON string: {"bridge":"18mm","temple":"140mm","lens":"52mm"}
+  isRxRequired      Boolean    @default(false) // Does the product always require a prescription?
+  tryOnImageUrl     String?    // URL for virtual try-on overlay image (transparent PNG)
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   categoryId     String?
@@ -245,6 +279,13 @@ model ProductVariant {
   colour        String?
   size          String?
   material      String?
+
+  // ─── Optician-specific variant fields ─────────────────────────────────────
+  frameSize        String?   // e.g. "Small", "Medium", "Large" or measurements "52-18-140"
+  lensType         String?   // e.g. "Single Vision", "Bifocal", "Progressive", "Non-Prescription"
+  lensCoating      String?   // e.g. "Anti-Glare", "UV400", "Photochromic", "Blue Light Block"
+  prescriptionReady Boolean @default(false) // Can this variant accept an Rx prescription?
+
   priceOverride Decimal?
   stockQuantity Int      @default(0)
   lowStockThreshold Int   @default(5)
@@ -257,6 +298,87 @@ model ProductVariant {
   cartItems   CartItem[]
   orderItems  OrderItem[]
   stockAlerts StockAlert[]
+}
+
+// ─── PRESCRIPTIONS ────────────────────────────────────────────────────────────────
+
+model Prescription {
+  id              String   @id @default(cuid())
+  customerId      String?
+  guestEmail      String?
+
+  // Right eye (OD = Oculus Dexter)
+  odSphere        Decimal? // e.g. -2.25
+  odCylinder      Decimal?
+  odAxis          Int?     // 0–180 degrees
+  odAdd           Decimal? // Reading addition (for bifocal/progressive)
+
+  // Left eye (OS = Oculus Sinister)
+  osSphere        Decimal?
+  osCylinder      Decimal?
+  osAxis          Int?
+  osAdd           Decimal?
+
+  // Pupillary Distance
+  pdDistance      Decimal? // Binocular PD for distance
+  pdNear          Decimal? // Binocular PD for near (if different)
+  pdRight         Decimal? // Monocular right PD
+  pdLeft          Decimal? // Monocular left PD
+
+  // Source
+  uploadedFileUrl String?  // URL to uploaded prescription image/PDF (Cloudinary)
+  uploadedFilePublicId String? // Cloudinary public_id for cleanup
+  isManualEntry   Boolean  @default(false) // true = typed in by customer; false = uploaded file
+  isVerified      Boolean  @default(false) // true = verified by optician staff
+  verifiedAt      DateTime?
+  verifiedById    String?  // User.id of the staff who verified
+
+  notes           String?  @db.Text
+  expiresAt       DateTime? // Prescriptions expire, typically after 1-2 years
+
+  orderId         String?  // Links to the order that used this prescription
+  orderItemId     String?  // Specific item within the order
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  customer  User?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  order     Order?  @relation("OrderPrescription")
+
+  @@index([customerId])
+  @@index([orderId])
+  @@index([isVerified])
+}
+
+// ─── APPOINTMENTS ─────────────────────────────────────────────────────────────────
+
+model Appointment {
+  id              String            @id @default(cuid())
+  customerId      String?
+  guestName       String?
+  guestEmail      String?
+  guestPhone      String?
+
+  type            AppointmentType   @default(EYE_TEST)
+  status          AppointmentStatus @default(PENDING)
+
+  scheduledDate   DateTime          // The date + time of the appointment
+  durationMinutes Int               @default(30)
+  notes           String?           @db.Text  // Customer notes / reason for visit
+  staffNotes      String?           @db.Text  // Internal notes from staff
+
+  // Reminder tracking
+  reminderSentAt  DateTime?
+  confirmationSentAt DateTime?
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  customer User? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([scheduledDate])
+  @@index([status])
+  @@index([customerId])
 }
 
 // ─── CART ─────────────────────────────────────────────────────────────────────
@@ -333,14 +455,19 @@ model Order {
   loyaltyPointsRedeemed Int           @default(0)
   loyaltyPointsEarned   Int           @default(0)
 
+  // ─── Optician order fields ─────────────────────────────────────────────────
+  prescriptionId  String?  @unique // The prescription used for this order (if any)
+  lensConfigJson  String?  @db.Text // JSON: per-item lens configuration choices
+
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 
-  customer        User?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customer        User?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
   items           OrderItem[]
-  shippingAddress Address     @relation(fields: [shippingAddressId], references: [id])
-  coupon          Coupon?     @relation(fields: [couponId], references: [id])
+  shippingAddress Address       @relation(fields: [shippingAddressId], references: [id])
+  coupon          Coupon?       @relation(fields: [couponId], references: [id])
   reviews         Review[]
+  prescription    Prescription? @relation("OrderPrescription", fields: [prescriptionId], references: [id])
 
   @@index([status])
   @@index([customerId])

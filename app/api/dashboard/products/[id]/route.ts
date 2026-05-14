@@ -106,6 +106,10 @@ export async function PUT(
           isFeatured: isFeatured !== undefined ? isFeatured : existingProduct.isFeatured,
           isOnSale: isOnSale !== undefined ? isOnSale : existingProduct.isOnSale,
           stockQuantity: stockQuantity !== undefined ? stockQuantity : existingProduct.stockQuantity,
+          productType: body.productType ?? undefined,
+          frameMeasurements: body.frameMeasurements ?? undefined,
+          isRxRequired: body.isRxRequired ?? undefined,
+          tryOnImageUrl: body.tryOnImageUrl ?? undefined,
         },
       });
 
@@ -164,6 +168,10 @@ export async function PUT(
                 stockQuantity: variant.stockQuantity || 0,
                 sku: variant.sku,
                 isActive: variant.isActive !== undefined ? variant.isActive : true,
+                frameSize: variant.frameSize || null,
+                lensType: variant.lensType || null,
+                lensCoating: variant.lensCoating || null,
+                prescriptionReady: variant.prescriptionReady ?? false,
               },
             });
           } else {
@@ -177,6 +185,10 @@ export async function PUT(
                 stockQuantity: variant.stockQuantity || 0,
                 sku: variant.sku,
                 isActive: variant.isActive !== undefined ? variant.isActive : true,
+                frameSize: variant.frameSize || null,
+                lensType: variant.lensType || null,
+                lensCoating: variant.lensCoating || null,
+                prescriptionReady: variant.prescriptionReady ?? false,
               },
             });
           }

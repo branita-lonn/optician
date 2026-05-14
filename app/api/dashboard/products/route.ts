@@ -95,6 +95,10 @@ export async function POST(req: NextRequest) {
           isFeatured: isFeatured || false,
           isOnSale: isOnSale || false,
           stockQuantity: stockQuantity || 0,
+          productType: body.productType ?? "GENERAL",
+          frameMeasurements: body.frameMeasurements || null,
+          isRxRequired: body.isRxRequired ?? false,
+          tryOnImageUrl: body.tryOnImageUrl || null,
         },
       });
 
@@ -120,7 +124,7 @@ export async function POST(req: NextRequest) {
 
       if (variants && variants.length > 0) {
         await tx.productVariant.createMany({
-          data: variants.map((v: { colour?: string; size?: string; material?: string; priceOverride?: number; stockQuantity?: number; sku?: string; isActive?: boolean }) => ({
+          data: variants.map((v: { colour?: string; size?: string; material?: string; priceOverride?: number; stockQuantity?: number; sku?: string; isActive?: boolean; frameSize?: string; lensType?: string; lensCoating?: string; prescriptionReady?: boolean }) => ({
             productId: newProduct.id,
             colour: v.colour,
             size: v.size,
@@ -129,6 +133,10 @@ export async function POST(req: NextRequest) {
             stockQuantity: v.stockQuantity || 0,
             sku: v.sku,
             isActive: v.isActive !== undefined ? v.isActive : true,
+            frameSize: v.frameSize || null,
+            lensType: v.lensType || null,
+            lensCoating: v.lensCoating || null,
+            prescriptionReady: v.prescriptionReady ?? false,
           })),
         });
       }

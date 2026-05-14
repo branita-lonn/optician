@@ -40,6 +40,11 @@ export interface ProductVariantPublic {
   stockQuantity: number;
   sku: string | null;
   isActive: boolean;
+  // Optician fields
+  frameSize?: string | null;
+  lensType?: string | null;
+  lensCoating?: string | null;
+  prescriptionReady: boolean;
 }
 
 export interface ProductPublic {
@@ -63,6 +68,11 @@ export interface ProductPublic {
   rating: number;
   reviewCount: number;
   flashSale?: FlashSalePublic | null;
+  // Optician fields
+  productType: string;
+  frameMeasurements?: string | null;
+  isRxRequired: boolean;
+  tryOnImageUrl?: string | null;
 }
 
 export interface FlashSalePublic {
@@ -138,12 +148,21 @@ export type ProductWithRelationsSerialized = Omit<ProductWithRelations, "price" 
     priceOverride: number | null;
     createdAt: string;
     updatedAt: string;
+    frameSize: string | null;
+    lensType: string | null;
+    lensCoating: string | null;
+    prescriptionReady: boolean;
   })[];
   flashSale: (Omit<Exclude<ProductWithRelations["flashSale"], null>, "salePrice" | "startTime" | "endTime"> & {
     salePrice: number;
     startTime: string;
     endTime: string;
   }) | null;
+  // Optician fields
+  productType: string;
+  frameMeasurements: string | null;
+  isRxRequired: boolean;
+  tryOnImageUrl: string | null;
 };
 
 export interface VariantInput {
@@ -172,6 +191,87 @@ export interface ProductFormValues {
   stockQuantity: number;
   images: string[];
   variants: VariantInput[];
+}
+
+// ─── PRESCRIPTION TYPES ───────────────────────────────────────────────────────
+
+export interface PrescriptionFormValues {
+  // Right eye
+  odSphere?: number;
+  odCylinder?: number;
+  odAxis?: number;
+  odAdd?: number;
+  // Left eye
+  osSphere?: number;
+  osCylinder?: number;
+  osAxis?: number;
+  osAdd?: number;
+  // PD
+  pdDistance?: number;
+  pdNear?: number;
+  pdRight?: number;
+  pdLeft?: number;
+  // Source
+  uploadedFileUrl?: string;
+  uploadedFilePublicId?: string;
+  isManualEntry: boolean;
+  notes?: string;
+}
+
+export interface PrescriptionPublic extends PrescriptionFormValues {
+  id: string;
+  customerId?: string | null;
+  guestEmail?: string | null;
+  isVerified: boolean;
+  verifiedAt?: string | null;
+  orderId?: string | null;
+  createdAt: string;
+}
+
+// ─── APPOINTMENT TYPES ────────────────────────────────────────────────────────
+
+export type AppointmentType =
+  | "EYE_TEST"
+  | "FRAME_FITTING"
+  | "CONTACT_LENS_CONSULTATION"
+  | "COLLECTION"
+  | "FOLLOW_UP";
+
+export type AppointmentStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "NO_SHOW";
+
+export interface AppointmentPublic {
+  id: string;
+  customerId?: string | null;
+  guestName?: string | null;
+  guestEmail?: string | null;
+  guestPhone?: string | null;
+  type: AppointmentType;
+  status: AppointmentStatus;
+  scheduledDate: string;
+  durationMinutes: number;
+  notes?: string | null;
+  staffNotes?: string | null;
+  reminderSentAt?: string | null;
+  confirmationSentAt?: string | null;
+  createdAt: string;
+  customer?: { name: string | null; email: string | null } | null;
+}
+
+// ─── LENS CONFIGURATOR ────────────────────────────────────────────────────────
+
+export interface LensConfigItem {
+  orderItemIndex: number;        // index into the cart items array
+  productId: string;
+  variantId?: string;
+  lensType: string;              // e.g. "Single Vision", "Non-Prescription"
+  lensCoating: string;           // e.g. "Anti-Glare", "UV400"
+  prescriptionId?: string;       // set if customer provided Rx
+  prescriptionSource: "upload" | "manual" | "none";
 }
 
 // ─── REVIEWS ──────────────────────────────────────────────────────────────────
