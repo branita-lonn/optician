@@ -1,13 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { differenceInHours } from "date-fns";
 
 export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+
   try {
+    const { id } = await params;
     const session = await auth();
 
     if (!session) {
@@ -15,8 +17,9 @@ export async function PATCH(
     }
 
     const appointment = await prisma.appointment.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
+
 
     if (!appointment) {
       return new NextResponse("Not found", { status: 404 });
@@ -39,7 +42,8 @@ export async function PATCH(
     }
 
     const updatedAppointment = await prisma.appointment.update({
-      where: { id: params.id },
+      where: { id },
+
       data: {
         status: "CANCELLED",
       },

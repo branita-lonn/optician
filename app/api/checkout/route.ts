@@ -28,7 +28,10 @@ const checkoutSchema = z.object({
   paymentMethod: z.enum(["MPESA", "STRIPE"]),
   couponCode: z.string().optional(),
   giftCardCode: z.string().optional(),
+  prescriptionId: z.string().optional().nullable(),
+  lensConfigJson: z.string().optional().nullable(),
 });
+
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -43,7 +46,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       fullName, email, phone,
       addressLine1, addressLine2, city, county, postalCode, saveAddress,
       paymentMethod, couponCode, giftCardCode,
+      prescriptionId, lensConfigJson,
     } = parsed.data;
+
 
     const session = await auth();
     const cookieStore = await cookies();
@@ -172,7 +177,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           couponCode: validCouponId ? couponCode : null,
           giftCardCode: (validGiftCardId && giftCardCode) ? giftCardCode.toUpperCase() : null,
           giftCardDiscount: giftCardDiscount,
+          prescriptionId: prescriptionId ?? null,
+          lensConfigJson: lensConfigJson ?? null,
           items: {
+
             create: cart.items.map(item => {
               let uPrice = item.variant?.priceOverride ? Number(item.variant.priceOverride) : Number(item.product.price);
               if (item.product.flashSale) {
@@ -184,6 +192,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 }
               }
               const vLabel = [item.variant?.colour, item.variant?.size, item.variant?.material].filter(Boolean).join(" / ");
+              
               return {
                 productId: item.productId,
                 variantId: item.variantId,
@@ -191,7 +200,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 variantLabel: vLabel,
                 quantity: item.quantity,
                 unitPrice: uPrice,
-                total: uPrice * item.quantity
+                total: uPrice * item.quantity,
+                lensConfigJson: item.lensConfigJson,
               };
             })
           }

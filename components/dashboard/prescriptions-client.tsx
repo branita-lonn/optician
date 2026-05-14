@@ -38,18 +38,18 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface Prescription {
   id: string;
-  odSphere: any;
-  odCylinder: any;
+  odSphere: number | string | null;
+  odCylinder: number | string | null;
   odAxis: number | null;
-  odAdd: any;
-  osSphere: any;
-  osCylinder: any;
+  odAdd: number | string | null;
+  osSphere: number | string | null;
+  osCylinder: number | string | null;
   osAxis: number | null;
-  osAdd: any;
-  pdDistance: any;
-  pdNear: any;
-  pdRight: any;
-  pdLeft: any;
+  osAdd: number | string | null;
+  pdDistance: number | string | null;
+  pdNear: number | string | null;
+  pdRight: number | string | null;
+  pdLeft: number | string | null;
   uploadedFileUrl: string | null;
   isManualEntry: boolean;
   isVerified: boolean;
@@ -95,8 +95,8 @@ export function PrescriptionsClient({ initialPrescriptions }: { initialPrescript
 
       toast.success("Prescription verified");
       router.refresh();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to verify");
     } finally {
       setLoading(false);
     }
@@ -115,8 +115,8 @@ export function PrescriptionsClient({ initialPrescriptions }: { initialPrescript
 
       toast.success("Notes saved");
       router.refresh();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to save notes");
     } finally {
       setLoading(false);
     }
@@ -192,15 +192,15 @@ export function PrescriptionsClient({ initialPrescriptions }: { initialPrescript
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Sheet>
+                    <Sheet onOpenChange={(open) => {
+                      if (open) setStaffNotes(rx.staffNotes || "");
+                    }}>
                       <SheetTrigger>
                         <Button variant="ghost" size="sm" className="rounded-full h-8 w-8 p-0">
                           <Eye className="h-4 w-4" />
                         </Button>
                       </SheetTrigger>
-                      <SheetContent className="sm:max-w-xl overflow-y-auto" onOpenAutoFocus={(e) => {
-                        setStaffNotes(rx.staffNotes || "");
-                      }}>
+                      <SheetContent className="sm:max-w-xl overflow-y-auto">
                         <SheetHeader>
                           <SheetTitle>Prescription Details</SheetTitle>
                           <SheetDescription>

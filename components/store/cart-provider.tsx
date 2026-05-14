@@ -22,7 +22,9 @@ interface AddItemPayload {
   variantId?: string;
   quantity?: number;
   productName?: string; // used for toast message
+  lensConfig?: any;
 }
+
 
 interface CartContextValue {
   cart: CartWithItems | null;
@@ -141,13 +143,14 @@ export default function CartProvider({
   // ── Mutations ────────────────────────────────────────────────────────────
 
   const addItem = useCallback(
-    async ({ productId, variantId, quantity = 1, productName }: AddItemPayload) => {
+    async ({ productId, variantId, quantity = 1, productName, lensConfig }: AddItemPayload) => {
       try {
         const res = await fetch("/api/cart/items", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productId, variantId, quantity }),
+          body: JSON.stringify({ productId, variantId, quantity, lensConfig }),
         });
+
 
         if (!res.ok) {
           const err = await res.json() as { error?: string };

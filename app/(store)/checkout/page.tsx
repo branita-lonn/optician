@@ -11,12 +11,14 @@ import * as z from "zod";
 import { useSession } from "next-auth/react";
 import { ChevronRight, CheckCircle2, AlertCircle, ShoppingBag, Loader2, Gift } from "lucide-react";
 import { useCart } from "@/components/store/cart-provider";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
+import { CheckoutPrescriptionStep } from "@/components/store/checkout-prescription-step";
+
 
 // ─── KENYA COUNTIES ──────────────────────────────────────────────────────────
 const KENYA_COUNTIES = [
@@ -50,6 +52,11 @@ type ContactFormValues = z.infer<typeof contactSchema>;
 type AddressFormValues = z.infer<typeof addressSchema>;
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
+
+interface StoreSettings {
+  enableMpesa?: boolean;
+  enableStripe?: boolean;
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -95,7 +102,8 @@ export default function CheckoutPage() {
     }
   }, [cartLoading, items.length, router, isSubmitting]);
 
-  const [settings, setSettings] = useState<any>(null);
+
+  const [settings, setSettings] = useState<StoreSettings | null>(null);
 
   // Pre-fill logged-in user data and fetch settings
   useEffect(() => {
@@ -157,14 +165,28 @@ export default function CheckoutPage() {
     return Math.max(0, subtotal - discount + shippingCost - giftDiscount);
   }, [subtotal, appliedCoupon, shippingCost, appliedGiftCard]);
 
+  // Lens/Rx Items
+  const rxItems = useMemo(() => {
+    return items
+      .filter((item) => item.lensConfigJson)
+      .map((item) => ({
+        productName: item.product.name,
+        variantLabel: [item.variant?.colour, item.variant?.size, item.variant?.material]
+          .filter(Boolean)
+          .join(" / "),
+        lensConfig: item.lensConfigJson ? JSON.parse(item.lensConfigJson) : null,
+      }));
+  }, [items]);
+
+
   // ─── SUBMIT HANDLERS ────────────────────────────────────────────────────────
 
-  function onContactSubmit(_data: ContactFormValues) {
+  function onContactSubmit() {
     setStep(2);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function onAddressSubmit(_data: AddressFormValues) {
+  function onAddressSubmit() {
     setStep(3);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -222,13 +244,29 @@ export default function CheckoutPage() {
     const contactData = contactForm.getValues();
     const addressData = addressForm.getValues();
 
+    // Collect lens configs
+    const lensConfigs = items
+      .filter(item => item.lensConfigJson)
+      .map(item => ({
+        cartItemId: item.id,
+        productId: item.productId,
+        variantId: item.variantId,
+        config: JSON.parse(item.lensConfigJson!)
+      }));
+
+    // Find the first prescriptionId if multiple exist (current limitation of Order model)
+    const primaryRxId = rxItems.find(item => item.lensConfig?.prescriptionId)?.lensConfig?.prescriptionId;
+
     const payload = {
       ...contactData,
       ...addressData,
       paymentMethod,
       couponCode: appliedCoupon?.code,
       giftCardCode: appliedGiftCard?.code,
+      prescriptionId: primaryRxId,
+      lensConfigJson: JSON.stringify(lensConfigs),
     };
+
 
     setIsSubmitting(true);
     try {
@@ -359,7 +397,10 @@ export default function CheckoutPage() {
             </div>
 
             {step === 2 ? (
-              <form onSubmit={(e) => { void addressForm.handleSubmit(onAddressSubmit as any)(e); }} className="space-y-4">
+              <form onSubmit={(e) => { 
+                const handler = addressForm.handleSubmit(onAddressSubmit);
+                void handler(e);
+              }} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">Street Address</label>
                   <Input {...addressForm.register("addressLine1")} className="rounded-xl" placeholder="123 Moi Avenue" />
@@ -423,6 +464,17 @@ export default function CheckoutPage() {
               </div>
             ) : null}
           </section>
+
+          {/* PRESCRIPTION SUMMARY (Only for Rx products) */}
+          {rxItems.length > 0 && (
+            <section className={cn(
+              "transition-opacity duration-300",
+              step < 2 ? "opacity-50 pointer-events-none" : "opacity-100"
+            )}>
+              <CheckoutPrescriptionStep rxItems={rxItems} />
+            </section>
+          )}
+
 
           {/* STEP 3: PAYMENT */}
           <section className={`rounded-3xl border border-border bg-card p-6 ${step < 3 ? 'opacity-50 pointer-events-none' : ''}`}>

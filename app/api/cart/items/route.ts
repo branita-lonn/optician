@@ -14,6 +14,13 @@ const addItemSchema = z.object({
   productId: z.string().min(1),
   variantId: z.string().optional(),
   quantity: z.number().int().min(1).default(1),
+  lensConfig: z.object({
+    needsPrescription: z.boolean(),
+    lensType: z.string(),
+    lensCoating: z.string(),
+    prescriptionId: z.string().nullable().optional(),
+    prescriptionSource: z.enum(["saved", "new", "later", "none"]),
+  }).optional().nullable(),
 });
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -28,7 +35,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const { productId, variantId, quantity } = parsed.data;
+    const { productId, variantId, quantity, lensConfig } = parsed.data;
+    const lensConfigJson = lensConfig ? JSON.stringify(lensConfig) : null;
 
     // Validate product
     const product = await prisma.product.findUnique({
@@ -72,11 +80,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const cart = await getOrCreateCart(customerId, sessionId ?? undefined);
 
-    // Check if item already in cart
+    // Check if item already in cart (matching productId, variantId AND lensConfigJson)
     const existingItem = cart.items.find(
       (item) =>
         item.productId === productId &&
-        (item.variantId ?? undefined) === variantId
+        (item.variantId ?? null) === (variantId ?? null) &&
+        item.lensConfigJson === lensConfigJson
     );
 
     if (existingItem) {
@@ -98,9 +107,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           productId,
           variantId: variantId ?? null,
           quantity,
+          lensConfigJson,
         },
       });
     }
+
 
     // Return updated cart
     const updatedCart = await prisma.cart.findUnique({

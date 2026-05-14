@@ -1,14 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { sendAppointmentConfirmation } from "@/lib/mail";
 import { format } from "date-fns";
 
 export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+
   try {
+    const { id } = await params;
     const session = await auth();
 
     if (!session || session.user.role !== "STORE_OWNER") {
@@ -16,7 +18,8 @@ export async function POST(
     }
 
     const appointment = await prisma.appointment.findUnique({
-      where: { id: params.id },
+      where: { id },
+
       include: { customer: true },
     });
 
@@ -29,7 +32,8 @@ export async function POST(
     }
 
     const updatedAppointment = await prisma.appointment.update({
-      where: { id: params.id },
+      where: { id },
+
       data: {
         status: "CONFIRMED",
         confirmationSentAt: new Date(),

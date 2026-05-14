@@ -62,6 +62,20 @@ function CartItemRow({ item }: { item: CartWithItems["items"][number] }) {
         {variantLabel && (
           <p className="text-sm text-muted-foreground">{variantLabel}</p>
         )}
+        {item.lensConfigJson && (() => {
+          try {
+            const config = JSON.parse(item.lensConfigJson);
+            return (
+              <p className="text-xs text-primary/80 font-medium mt-1 leading-relaxed">
+                {config.lensType} · {config.lensCoating}
+                {config.prescriptionSource === "later" && " · Rx to be provided later"}
+              </p>
+            );
+          } catch {
+            return null;
+          }
+        })()}
+
         <p className="text-sm font-bold text-primary mt-auto">
           {formatCurrency(price)}
         </p>

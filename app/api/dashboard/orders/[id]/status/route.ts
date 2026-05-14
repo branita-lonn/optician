@@ -31,8 +31,10 @@ export async function PATCH(
       where: { id },
       data: { status },
       include: {
-        customer: { select: { email: true, name: true } }
+        customer: { select: { email: true, name: true } },
+        prescription: true,
       }
+
     });
 
     // Determine recipient email and name

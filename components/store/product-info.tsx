@@ -15,6 +15,9 @@ import StockAlertButton from "@/components/store/stock-alert-button";
 import { useWishlist } from "@/components/store/wishlist-provider";
 import { FlashSaleCountdown } from "@/components/store/flash-sale-countdown";
 import { ProductBundleCallout } from "@/components/store/product-bundle-callout";
+import { LensConfiguratorModal, type LensConfig } from "@/components/store/lens-configurator-modal";
+import type { PrescriptionPublic } from "@/types";
+import { useSession } from "next-auth/react";
 
 interface ProductInfoProps {
   product: ProductWithRelationsSerialized;
@@ -37,6 +40,12 @@ export default function ProductInfo({
   const [selectedFrameSize, setSelectedFrameSize] = useState<string | null>(null);
   const [selectedLensType, setSelectedLensType] = useState<string | null>(null);
   const [selectedLensCoating, setSelectedLensCoating] = useState<string | null>(null);
+
+  const { data: session } = useSession();
+
+  const [configuratorOpen, setConfiguratorOpen] = useState(false);
+  const [savedPrescriptions, setSavedPrescriptions] = useState<PrescriptionPublic[]>([]);
+  const [prescriptionsLoaded, setPrescriptionsLoaded] = useState(false);
 
   // Sync internal state with external state
   useEffect(() => {
@@ -108,8 +117,19 @@ export default function ProductInfo({
     setQuantity(1);
   }
 
-  async function handleAddToCart() {
+  async function handleAddToCartClick() {
     if (isOutOfStock) return;
+
+    if (needsConfigurator) {
+      await loadPrescriptions();
+      setConfiguratorOpen(true);
+      return;
+    }
+
+    await handleAddToCart(null);
+  }
+
+  async function handleAddToCart(lensConfig: LensConfig | null) {
     setIsAdding(true);
     try {
       await addItem({
@@ -117,11 +137,33 @@ export default function ProductInfo({
         variantId: selectedVariantId,
         quantity,
         productName: product.name,
+        lensConfig: lensConfig ?? undefined,
       });
     } finally {
       setIsAdding(false);
     }
   }
+
+  const loadPrescriptions = async () => {
+    if (prescriptionsLoaded) return;
+    try {
+      const res = await fetch("/api/prescriptions");
+      if (res.ok) {
+        const data = await res.json() as { prescriptions: PrescriptionPublic[] };
+        setSavedPrescriptions(data.prescriptions ?? []);
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setPrescriptionsLoaded(true);
+    }
+  };
+
+  const needsConfigurator =
+    product.isRxRequired ||
+    (selectedVariant?.prescriptionReady === true &&
+      selectedVariant?.lensType !== "Non-Prescription");
+
 
   return (
     <div className="flex flex-col gap-5">
@@ -450,7 +492,7 @@ export default function ProductInfo({
           size="lg"
           className="flex-1 rounded-2xl gap-2 py-2 border-foreground/30"
           disabled={isOutOfStock || isAdding || (product.variants.length > 0 && !selectedVariantId)}
-          onClick={() => void handleAddToCart()}
+          onClick={() => void handleAddToCartClick()}
         >
           <ShoppingCart className="h-5 w-5" />
           {isAdding 
@@ -480,6 +522,20 @@ export default function ProductInfo({
 
       {/* Bundles */}
       <ProductBundleCallout bundles={bundles} currentProductId={product.id} />
+
+      {/* Lens Configurator */}
+      {needsConfigurator && (
+        <LensConfiguratorModal
+          open={configuratorOpen}
+          onClose={() => setConfiguratorOpen(false)}
+          onConfirm={(config) => handleAddToCart(config)}
+          productName={product.name}
+          isRxRequired={product.isRxRequired}
+          savedPrescriptions={savedPrescriptions}
+          isLoggedIn={!!session?.user}
+          guestEmail={session?.user?.email ?? undefined}
+        />
+      )}
     </div>
   );
 }

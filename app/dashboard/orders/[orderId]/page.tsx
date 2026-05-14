@@ -4,11 +4,11 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
-import { Printer, MapPin, Phone, Mail, Package, ArrowLeft } from "lucide-react";
+import { MapPin, Phone, Mail, Package, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/dashboard/orders/status-badge";
 import Link from "next/link";
 import { OrderStatusControl } from "@/components/dashboard/orders/order-status-control";
@@ -33,6 +33,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
     include: {
       customer: { select: { name: true, email: true, phone: true } },
       shippingAddress: true,
+      prescription: true,
       items: {
         include: {
           product: { select: { images: { take: 1 } } }
@@ -40,6 +41,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
       }
     }
   });
+
 
   if (!order) {
     notFound();
@@ -87,29 +89,48 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-border/50">
-                {order.items.map((item) => (
-                  <div key={item.id} className="flex items-center gap-4 p-4">
-                    <div className="relative h-16 w-16 rounded-2xl bg-muted border border-border/50 overflow-hidden shrink-0">
-                        {/* Placeholder for product image if needed */}
-                        <div className="h-full w-full flex items-center justify-center text-[10px] text-muted-foreground uppercase text-center p-1">
-                            {item.productName}
+                {order.items.map((item) => {
+                  const itemLensConfig = item.lensConfigJson ? JSON.parse(item.lensConfigJson) : null;
+                  
+                  return (
+                    <div key={item.id} className="p-4">
+                      <div className="flex items-center gap-4">
+                        <div className="relative h-16 w-16 rounded-2xl bg-muted border border-border/50 overflow-hidden shrink-0">
+                            <div className="h-full w-full flex items-center justify-center text-[10px] text-muted-foreground uppercase text-center p-1">
+                                {item.productName}
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate">{item.productName}</p>
-                      {item.variantLabel && (
-                        <p className="text-xs text-muted-foreground">{item.variantLabel}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold truncate">{item.productName}</p>
+                          {item.variantLabel && (
+                            <p className="text-xs text-muted-foreground">{item.variantLabel}</p>
+                          )}
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="font-medium">{formatCurrency(Number(item.unitPrice))} × {item.quantity}</p>
+                          <p className="text-sm font-bold text-primary">{formatCurrency(Number(item.total))}</p>
+                        </div>
+                      </div>
+
+                      {itemLensConfig && (
+                        <div className="mt-3 ml-20 p-3 rounded-xl bg-primary/5 border border-primary/10 space-y-1">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-primary/70">Lens Configuration</p>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1">
+                            <p className="text-xs font-medium">Type: <span className="text-muted-foreground">{itemLensConfig.lensType}</span></p>
+                            <p className="text-xs font-medium">Coating: <span className="text-muted-foreground">{itemLensConfig.lensCoating}</span></p>
+                            {itemLensConfig.prescriptionSource === "later" && (
+                              <p className="text-xs font-bold text-amber-600">Rx to be provided later</p>
+                            )}
+                          </div>
+                        </div>
                       )}
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="font-medium">{formatCurrency(Number(item.unitPrice))} × {item.quantity}</p>
-                      <p className="text-sm font-bold text-primary">{formatCurrency(Number(item.total))}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
+
 
           <Card className="rounded-3xl border-border/50 bg-card/50 shadow-sm overflow-hidden">
              <CardHeader className="bg-muted/30">
@@ -172,6 +193,59 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             </CardContent>
           </Card>
 
+          {order.prescription && (
+            <Card className="rounded-3xl border-border/50 bg-card/50 shadow-sm overflow-hidden">
+              <CardHeader className="bg-muted/30">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <span className="h-5 w-5 flex items-center justify-center rounded bg-primary text-[10px] text-primary-foreground font-bold">Rx</span>
+                  Prescription Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Right Eye (OD)</p>
+                    <div className="text-xs space-y-1">
+                      <p>Sphere: <span className="font-semibold">{Number(order.prescription.odSphere) || "—"}</span></p>
+                      <p>Cylinder: <span className="font-semibold">{Number(order.prescription.odCylinder) || "—"}</span></p>
+                      <p>Axis: <span className="font-semibold">{order.prescription.odAxis || "—"}°</span></p>
+                      {Number(order.prescription.odAdd) > 0 && <p>Add: <span className="font-semibold">{Number(order.prescription.odAdd)}</span></p>}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Left Eye (OS)</p>
+                    <div className="text-xs space-y-1">
+                      <p>Sphere: <span className="font-semibold">{Number(order.prescription.osSphere) || "—"}</span></p>
+                      <p>Cylinder: <span className="font-semibold">{Number(order.prescription.osCylinder) || "—"}</span></p>
+                      <p>Axis: <span className="font-semibold">{order.prescription.osAxis || "—"}°</span></p>
+                      {Number(order.prescription.osAdd) > 0 && <p>Add: <span className="font-semibold">{Number(order.prescription.osAdd)}</span></p>}
+                    </div>
+                  </div>
+                </div>
+
+                {order.prescription.pdDistance && (
+                   <div className="pt-2 border-t border-border/50">
+                     <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Pupillary Distance (PD)</p>
+                     <p className="text-sm font-semibold mt-1">{Number(order.prescription.pdDistance)} mm</p>
+                   </div>
+                )}
+
+                <div className="pt-3 flex items-center justify-between">
+                  <Link href={`/dashboard/prescriptions/${order.prescriptionId}`}>
+                    <Button variant="outline" size="sm" className="rounded-xl h-8 text-xs">
+                      View Full Prescription
+                    </Button>
+                  </Link>
+                  <div className="flex items-center gap-1.5">
+                    <div className={cn("h-2 w-2 rounded-full", order.prescription.isVerified ? "bg-emerald-500" : "bg-amber-500")} />
+                    <span className="text-[10px] font-bold uppercase">{order.prescription.isVerified ? "Verified" : "Unverified"}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+
           <Card className="rounded-3xl border-border/50 bg-card/50 shadow-sm overflow-hidden">
             <CardHeader className="bg-muted/30">
               <CardTitle className="text-lg">Shipping Address</CardTitle>
@@ -196,7 +270,7 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
                 <CardTitle className="text-lg">Order Notes</CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <p className="text-sm italic text-muted-foreground">"{order.notes}"</p>
+                <p className="text-sm italic text-muted-foreground">&quot;{order.notes}&quot;</p>
               </CardContent>
             </Card>
           )}

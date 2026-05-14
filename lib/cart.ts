@@ -99,7 +99,8 @@ export async function mergeGuestCartOnLogin(
     const existingItem = customerCart.items.find(
       (i) =>
         i.productId === guestItem.productId &&
-        i.variantId === guestItem.variantId
+        i.variantId === guestItem.variantId &&
+        i.lensConfigJson === guestItem.lensConfigJson
     );
 
     if (existingItem) {
@@ -114,10 +115,12 @@ export async function mergeGuestCartOnLogin(
           productId: guestItem.productId,
           variantId: guestItem.variantId,
           quantity: guestItem.quantity,
+          lensConfigJson: guestItem.lensConfigJson,
         },
       });
     }
   }
+
 
   // Delete the guest cart (cascades to its items)
   await prisma.cart.delete({ where: { id: guestCart.id } });

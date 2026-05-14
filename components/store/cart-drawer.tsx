@@ -63,9 +63,23 @@ function CartItemRow({ item }: { item: CartWithItems["items"][number] }) {
         {variantLabel && (
           <p className="text-xs text-muted-foreground mt-0.5">{variantLabel}</p>
         )}
+        {item.lensConfigJson && (() => {
+          try {
+            const config = JSON.parse(item.lensConfigJson);
+            return (
+              <p className="text-[10px] text-primary/80 font-medium mt-1 leading-relaxed">
+                {config.lensType} · {config.lensCoating}
+                {config.prescriptionSource === "later" && " · Rx Later"}
+              </p>
+            );
+          } catch {
+            return null;
+          }
+        })()}
         <p className="text-sm font-semibold mt-1 text-primary">
           {formatCurrency(price * item.quantity)}
         </p>
+
 
         {/* Quantity stepper */}
         <div className="flex items-center gap-1.5 mt-2">
