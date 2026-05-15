@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
-<url><loc>http://localhost:3000/auth/login</loc><lastmod>2026-05-14T08:30:21.318Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>http://localhost:3000/auth/register</loc><lastmod>2026-05-14T08:30:21.320Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>http://localhost:3000/robots.txt</loc><lastmod>2026-05-14T08:30:21.320Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-<url><loc>http://localhost:3000/sitemap.xml</loc><lastmod>2026-05-14T08:30:21.320Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/auth/login</loc><lastmod>2026-05-15T06:10:03.900Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/auth/register</loc><lastmod>2026-05-15T06:10:03.900Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/robots.txt</loc><lastmod>2026-05-15T06:10:03.900Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/sitemap.xml</loc><lastmod>2026-05-15T06:10:03.900Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>http://localhost:3000/products/square-glasses-9470</loc><lastmod>2026-05-15T04:35:32.326Z</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>http://localhost:3000/categories/reading-glasses</loc><lastmod>2026-05-15T06:10:04.068Z</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
 </urlset>

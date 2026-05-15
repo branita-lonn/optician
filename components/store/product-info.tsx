@@ -18,6 +18,7 @@ import { ProductBundleCallout } from "@/components/store/product-bundle-callout"
 import { LensConfiguratorModal, type LensConfig } from "@/components/store/lens-configurator-modal";
 import type { PrescriptionPublic } from "@/types";
 import { useSession } from "next-auth/react";
+import { VirtualTryOn } from "@/components/store/virtual-try-on";
 
 interface ProductInfoProps {
   product: ProductWithRelationsSerialized;
@@ -484,6 +485,13 @@ export default function ProductInfo({
           )}
         </div>
       </div>
+
+      {/* Virtual Try-On */}
+      {product.tryOnImageUrl && (
+        <div className="pt-2">
+          <VirtualTryOn imageUrl={product.tryOnImageUrl} />
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3 pt-2">

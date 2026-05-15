@@ -50,7 +50,7 @@ export function AppointmentList() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [dateFilter, setDateFilter] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [dateFilter, setDateFilter] = useState("");
 
   const fetchAppointments = useCallback(async () => {
     try {

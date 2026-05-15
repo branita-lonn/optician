@@ -195,10 +195,8 @@ export function PrescriptionsClient({ initialPrescriptions }: { initialPrescript
                     <Sheet onOpenChange={(open) => {
                       if (open) setStaffNotes(rx.staffNotes || "");
                     }}>
-                      <SheetTrigger>
-                        <Button variant="ghost" size="sm" className="rounded-full h-8 w-8 p-0">
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                      <SheetTrigger render={<Button variant="ghost" size="sm" className="rounded-full h-8 w-8 p-0" />}>
+                        <Eye className="h-4 w-4" />
                       </SheetTrigger>
                       <SheetContent className="sm:max-w-xl overflow-y-auto">
                         <SheetHeader>

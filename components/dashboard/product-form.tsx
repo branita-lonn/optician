@@ -78,7 +78,7 @@ const formSchema = z.object({
   ]).default("GENERAL"),
   frameMeasurements: z.string().optional().nullable(),
   isRxRequired: z.boolean().default(false),
-  tryOnImageUrl: z.string().url().optional().nullable(),
+  tryOnImageUrl: z.string().optional().nullable(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -879,17 +879,16 @@ export function ProductForm({ initialData, categories, featuredCount }: ProductF
                   <FormItem>
                     <FormLabel>Virtual Try-On Overlay URL</FormLabel>
                     <FormControl>
-                      <Input
-                        disabled={loading}
-                        placeholder="https://res.cloudinary.com/..."
-                        {...field}
-                        value={field.value || ""}
-                        className="rounded-xl"
+                      <ImageUpload
+                        value={field.value ? [{ url: field.value }] : []}
+                        onChange={(images) => field.onChange(images.length > 0 ? images[0].url : "")}
+                        onRemove={() => field.onChange("")}
+                        maxImages={1}
+                        folder="optician/tryon"
                       />
                     </FormControl>
                     <FormDescription className="text-xs">
-                      Transparent PNG of just the frames, used for the AR try-on feature.
-                      Upload as a transparent PNG to Cloudinary and paste the URL here.
+                      Upload a transparent PNG of just the frames, used for the AR try-on feature.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
