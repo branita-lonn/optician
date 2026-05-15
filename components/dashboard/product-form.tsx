@@ -884,7 +884,7 @@ export function ProductForm({ initialData, categories, featuredCount }: ProductF
                         onChange={(images) => field.onChange(images.length > 0 ? images[0].url : "")}
                         onRemove={() => field.onChange("")}
                         maxImages={1}
-                        folder="optician/tryon"
+                        folder="miduka/tryon"
                       />
                     </FormControl>
                     <FormDescription className="text-xs">
