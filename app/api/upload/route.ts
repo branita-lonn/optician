@@ -12,7 +12,8 @@ const ALLOWED_FOLDERS = [
   "miduka/hero/desktop",
   "miduka/hero/mobile",
   "miduka/hero/videos",
-  "miduka/prescriptions" // Added for Optician suite
+  "miduka/prescriptions", // Added for Optician suite
+  "miduka/tryon"
 ];
 
 export async function POST(req: NextRequest) {
