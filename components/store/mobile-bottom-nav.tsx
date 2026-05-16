@@ -5,22 +5,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Grid2X2, ShoppingCart, Gift, User, Search } from "lucide-react";
+import { Home, Grid2X2, Gift, User, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCart } from "@/components/store/cart-provider";
 
 const TABS = [
   { href: "/", label: "Home", icon: Home, badge: undefined },
-  { href: "/search", label: "Products", icon: Search, badge: undefined },
+  { href: "/products", label: "Products", icon: Search, badge: undefined },
   { href: "/categories", label: "Categories", icon: Grid2X2, badge: undefined },
   { href: "/gift-cards", label: "Gift Cards", icon: Gift, badge: undefined },
-  { href: "/cart", label: "Cart", icon: ShoppingCart, badge: 0 },
   { href: "/account", label: "Account", icon: User, badge: undefined },
 ] as const;
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
-  const { itemCount } = useCart();
 
   return (
     <>
@@ -31,7 +28,6 @@ export default function MobileBottomNav() {
     >
       <div className="flex items-stretch justify-around h-16">
         {TABS.map(({ href, label, icon: Icon, badge }) => {
-          const displayBadge = href === "/cart" ? itemCount : badge;
           const isActive =
             href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
@@ -49,9 +45,9 @@ export default function MobileBottomNav() {
             >
               <div className="relative">
                 <Icon className="h-5 w-5" />
-                {displayBadge !== undefined && displayBadge > 0 && (
+                {badge !== undefined && badge > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                    {displayBadge > 9 ? "9+" : displayBadge}
+                    {badge > 9 ? "9+" : badge}
                   </span>
                 )}
               </div>

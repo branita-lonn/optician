@@ -42,7 +42,7 @@ export default function StoreHeader({ storeName, logoUrl, logoBlurDataUrl, user 
   const NAV_LINKS = [
     { href: "/", label: "Home" },
     { href: "/categories", label: "Categories" },
-    { href: "/search", label: "Products" },
+    { href: "/products", label: "Products" },
     { href: "/gift-cards", label: "Gift Cards" },
   ];
 
