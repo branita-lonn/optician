@@ -225,7 +225,7 @@ export default async function HomePage() {
         <HomepageSection 
           title="On Sale" 
           products={onSale.map(toCardProps)} 
-          viewAllHref="/search?onSale=true" 
+          viewAllHref="/products?onSale=true" 
         />
 
         {/* ── Category Tiles ────────────────────────────────────────────── */}
